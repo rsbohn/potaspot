@@ -5,6 +5,7 @@
 #define SIO_WRITE 0x08
 #define SIO_DIRECTORY 0x02
 #define SIO_APPEND 0x01
+#define SIO_RW (SIO_READ+SIO_WRITE)
 
 /**
  * Function to call sio
