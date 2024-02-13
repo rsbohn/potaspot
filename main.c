@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "nsio.h"
 #include "sio.h"
 
@@ -15,6 +16,7 @@ unsigned char query(char *path) {
     unsigned char err;
     int n;
     err = njsonquery(1, SIO_RW, path);
+    err = nstatus(1);
     buffer[0] = '\0';
     n = (OS.dvstat[1]<<8)+OS.dvstat[0];
     err = nread(1, buffer, 32);
@@ -25,7 +27,7 @@ unsigned char query(char *path) {
     }
     return err;
 }
-void main(void) {
+int main(void) {
     unsigned char err;
 
     /* putchar(CH_CLR); */
@@ -39,4 +41,9 @@ void main(void) {
     query("/0/spotTime");
     query("/0/activator");
 
+    err = nchanmode(1, SIO_RW, CHANNELMODE_PROTOCOL);
+    err = nclose(1);
+
+    sleep(90);
+    return 0;
 }
