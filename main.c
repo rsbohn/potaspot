@@ -10,8 +10,10 @@
 #include "sio.h"
 
 #define SCR_WIDTH (40)
+#define BSIZE (256)
 const char *api = "N:HTTPS://api.pota.app/spot/activator";
-char buffer[256];
+char buffer[BSIZE];
+char qbuffer[BSIZE];
 
 void slowly() {
     clock_t now = clock();
@@ -32,11 +34,12 @@ void text(char *s) {
     }
     putchar(' ');
 }
-unsigned char query(char *path) {
+unsigned char query(char *pathfmt, int i) {
     unsigned char err;
     int n;
-
-    err = njsonquery(1, SIO_RW, path);
+    int len;
+    len = sprintf(qbuffer, pathfmt, i, BSIZE);
+    err = njsonquery(1, SIO_RW, qbuffer);
     err = nstatus(1);
     buffer[0] = '\0';
     n = (OS.dvstat[1]<<8)+OS.dvstat[0];
@@ -49,8 +52,10 @@ unsigned char query(char *path) {
     }
     return err;
 }
-int main(void) {
+
+void loop() {
     unsigned char err;
+    int n;
 
     putchar(CH_CLR);
     puts("POTA Parks On The Air");
@@ -58,20 +63,27 @@ int main(void) {
     err = nchanmode(1, SIO_RW, CHANNELMODE_JSON);
     err = njsonparse(1, SIO_RW);
 
-    /* TODO: Format the display. */    
-    query("/0/spotId");
-    query("/0/activator");
-    query("/0/spotTime");
-    putchar('\n');
-    query("/1/spotId");
-    query("/1/activator");
-    query("/1/spotTime");
-    putchar('\n');
-
+    for (n = 0; n < 3; n++) {
+        query("/%d/spotId", n);
+        query("/%d/spotTime", n);
+        putchar('\n');
+        query("/%d/activator", n);
+        query("/%d/mode", n);
+        query("/%d/grid4", n);
+        putchar('\n');
+        query("/%d/name", n);
+        putchar('\n');
+        putchar('\n');
+    }
+    
     err = nchanmode(1, SIO_RW, CHANNELMODE_PROTOCOL);
     err = nclose(1);
+}
 
-    puts("load http://localhost:9000/potaspot.xex");
-    sleep(30);
+int main(void) {
+    for (;;) {
+        loop();
+        sleep(30);
+    }
     exit(0);
 }
